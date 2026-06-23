@@ -1,0 +1,12 @@
+{
+  "appsail": [
+    {
+      "name": "frontend-service",
+      "source": "frontend"
+    },
+    {
+      "name": "backend-service",
+      "source": "backend"
+    }
+  ]
+}
