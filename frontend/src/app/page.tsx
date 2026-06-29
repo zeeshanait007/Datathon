@@ -34,7 +34,7 @@ export default function LoginPage() {
               <ShieldAlert className="h-16 w-16 text-indigo-600 dark:text-indigo-500 relative z-10 transition-colors" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Crime Copilot</CardTitle>
+          <CardTitle className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">CrimeLens AI</CardTitle>
           <CardDescription className="text-indigo-700 dark:text-indigo-300 font-medium tracking-wide uppercase text-xs mt-2 transition-colors">Government-Grade Intelligence</CardDescription>
         </CardHeader>
         <CardContent className="relative z-10 mt-4">

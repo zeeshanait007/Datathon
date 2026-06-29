@@ -1,9 +1,0 @@
-{
-  "build_path": ".",
-  "stack": "node20",
-  "command": "node start.js",
-  "memory": 1024,
-  "env_variables": {
-    "NEXT_PUBLIC_API_URL": "https://backend-service-50043365852.development.catalystappsail.in"
-  }
-}

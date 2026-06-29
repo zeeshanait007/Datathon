@@ -5,7 +5,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, User, MapPin, AlertTriangle, Briefcase, Activity, X } from "lucide-react";
+import { Search, User, MapPin, AlertTriangle, Briefcase, Activity, X, Loader2, Link as LinkIcon, Crosshair, Network } from "lucide-react";
 import dynamic from "next/dynamic";
 
 const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), { ssr: false });
@@ -13,7 +13,7 @@ const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), { ssr: false 
 export default function NetworkPage() {
   const { t } = useTranslation();
   const fgRef = useRef<any>();
-  const [graphData, setGraphData] = useState({ nodes: [], links: [] });
+  const [graphData, setGraphData] = useState<{ nodes: any[]; links: any[] }>({ nodes: [], links: [] });
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
@@ -36,12 +36,10 @@ export default function NetworkPage() {
 
   const fetchGraph = () => {
     setLoading(true);
-    // Fetch a global network for the demo or a specific ID
     const url = searchQuery 
       ? `${process.env.NEXT_PUBLIC_API_URL || 'https://backend-service-50043365852.development.catalystappsail.in'}/api/network/${searchQuery}`
-      : `${process.env.NEXT_PUBLIC_API_URL || 'https://backend-service-50043365852.development.catalystappsail.in'}/api/network/all`; // Fetch the entire global network
+      : `${process.env.NEXT_PUBLIC_API_URL || 'https://backend-service-50043365852.development.catalystappsail.in'}/api/network/all`;
 
-    // For Datathon MVP, we will rely heavily on a robust fallback if API fails
     fetch(url)
       .then(res => {
         if (!res.ok) throw new Error("API Error");
@@ -52,25 +50,24 @@ export default function NetworkPage() {
         setGraphData(data);
       })
       .catch(() => {
-        // Impactful Demo Data Fallback
+        // Impactful Demo Data Fallback for demonstration when db is empty
         setGraphData({
           nodes: [
             { id: "s1", group: "suspect", label: "Ravi Kumar", risk: 0.89, status: "At Large" },
-            { id: "s2", group: "suspect", label: "Suresh", risk: 0.65, status: "Arrested" },
-            { id: "s3", group: "suspect", label: "Kiran", risk: 0.92, status: "Under Surveillance" },
-            { id: "c1", group: "crime", label: "Vehicle Theft", date: "2023-10-12", status: "Open" },
-            { id: "c2", group: "crime", label: "Cyber Fraud", date: "2023-11-05", status: "Investigating" },
-            { id: "l1", group: "location", label: "Koramangala 4th Block" },
-            { id: "l2", group: "location", label: "Indiranagar 100ft Road" },
-            { id: "v1", group: "victim", label: "Amit", age: 34 },
+            { id: "s2", group: "suspect", label: "Sunil D", risk: 0.65, status: "Arrested" },
+            { id: "s3", group: "suspect", label: "Priya Sharma", risk: 0.92, status: "Under Surveillance" },
+            { id: "c1", group: "crime", label: "FIR-2023/104", date: "2023-10-15", status: "Open" },
+            { id: "c2", group: "crime", label: "FIR-2023/106", date: "2023-11-05", status: "Investigating" },
+            { id: "l1", group: "location", label: "PS Zone 1" },
+            { id: "v1", group: "victim", label: "Anita Patel", age: 29 },
           ],
           links: [
-            { source: "s1", target: "c1", label: "COMMITTED" },
-            { source: "s1", target: "s2", label: "ASSOCIATED_WITH" },
-            { source: "s3", target: "c2", label: "MASTERMIND" },
-            { source: "s2", target: "c2", label: "ACCOMPLICE" },
+            { source: "s1", target: "c1", label: "ACCUSED_IN" },
+            { source: "s2", target: "c1", label: "ACCUSED_IN" },
+            { source: "s1", target: "s3", label: "KNOWN_ASSOCIATE" },
+            { source: "s3", target: "c2", label: "ACCUSED_IN" },
             { source: "c1", target: "l1", label: "OCCURRED_AT" },
-            { source: "c2", target: "l2", label: "OCCURRED_AT" },
+            { source: "c2", target: "l1", label: "OCCURRED_AT" },
             { source: "c1", target: "v1", label: "TARGETED" },
           ]
         });
@@ -84,11 +81,9 @@ export default function NetworkPage() {
     fetchGraph();
   }, []);
 
-  // Compute highlighting sets
   const { highlightNodes, highlightLinks } = useMemo(() => {
     const nodes = new Set();
     const links = new Set();
-
     if (hoverNode) {
       nodes.add(hoverNode.id);
       graphData.links.forEach((link: any) => {
@@ -99,7 +94,6 @@ export default function NetworkPage() {
         }
       });
     }
-
     if (selectedNode) {
       nodes.add(selectedNode.id);
       graphData.links.forEach((link: any) => {
@@ -110,7 +104,6 @@ export default function NetworkPage() {
         }
       });
     }
-
     return { highlightNodes: nodes, highlightLinks: links };
   }, [graphData, hoverNode, selectedNode]);
 
@@ -131,7 +124,7 @@ export default function NetworkPage() {
     if (node) {
       handleNodeClick(node);
     } else {
-      fetchGraph(); // Try to fetch from backend if not local
+      fetchGraph(); 
     }
   };
 
@@ -143,32 +136,32 @@ export default function NetworkPage() {
 
     const size = node.group === "suspect" ? 8 : node.group === "crime" ? 6 : 4;
     
-    // Draw glow
+    // Palantir Glow Effect
     if (isSelected || (isHighlighted && !selectedNode)) {
       ctx.beginPath();
-      ctx.arc(node.x, node.y, size * 1.5, 0, 2 * Math.PI, false);
-      ctx.fillStyle = node.group === "suspect" ? "rgba(239, 68, 68, 0.4)" : "rgba(255, 255, 255, 0.2)";
+      ctx.arc(node.x, node.y, size * 1.8, 0, 2 * Math.PI, false);
+      ctx.fillStyle = node.group === "suspect" ? "rgba(244, 63, 94, 0.4)" : "rgba(99, 102, 241, 0.3)";
       ctx.fill();
     }
 
-    // Draw Node
+    // Node Body
     ctx.beginPath();
     ctx.arc(node.x, node.y, size, 0, 2 * Math.PI, false);
-    ctx.fillStyle = isFaded ? "rgba(100,100,100,0.2)" : 
-                    node.group === "suspect" ? "#ef4444" : 
-                    node.group === "crime" ? "#eab308" : 
-                    node.group === "victim" ? "#3b82f6" : "#9ca3af";
+    ctx.fillStyle = isFaded ? "rgba(71, 85, 105, 0.2)" : 
+                    node.group === "suspect" ? "#f43f5e" : 
+                    node.group === "crime" ? "#6366f1" : 
+                    node.group === "victim" ? "#10b981" : "#94a3b8";
     ctx.fill();
 
-    // Draw Label
+    // Node Label
     if (!isFaded && globalScale >= 1.5) {
       const label = node.label || node.id;
-      const fontSize = 12 / globalScale;
-      ctx.font = `${fontSize}px Inter, sans-serif`;
+      const fontSize = 10 / globalScale;
+      ctx.font = `${fontSize}px monospace`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillStyle = "rgba(255,255,255,0.9)";
-      ctx.fillText(label, node.x, node.y + size + fontSize);
+      ctx.fillText(label, node.x, node.y + size + fontSize + 2);
     }
   }, [highlightNodes, hoverNode, selectedNode]);
 
@@ -184,23 +177,21 @@ export default function NetworkPage() {
     ctx.beginPath();
     ctx.moveTo(start.x, start.y);
     ctx.lineTo(end.x, end.y);
-    ctx.strokeStyle = isFaded ? "rgba(100,100,100,0.1)" : isHighlighted ? "rgba(255,255,255,0.6)" : "rgba(203, 213, 225, 0.2)";
-    ctx.lineWidth = isHighlighted ? 2 / globalScale : 1 / globalScale;
+    ctx.strokeStyle = isFaded ? "rgba(30, 41, 59, 0.5)" : isHighlighted ? "rgba(99, 102, 241, 0.8)" : "rgba(51, 65, 85, 0.5)";
+    ctx.lineWidth = isHighlighted ? 1.5 / globalScale : 0.5 / globalScale;
     ctx.stroke();
 
-    // Draw Link Label if highlighted and zoomed in
     if (isHighlighted && globalScale >= 2 && link.label) {
       const midX = (start.x + end.x) / 2;
       const midY = (start.y + end.y) / 2;
-      const fontSize = 8 / globalScale;
-      ctx.font = `${fontSize}px Inter, sans-serif`;
-      ctx.fillStyle = "rgba(200,200,200,0.8)";
+      const fontSize = 6 / globalScale;
+      ctx.font = `${fontSize}px monospace`;
+      ctx.fillStyle = "rgba(148, 163, 184, 0.8)";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       
-      // Calculate rotation
       let angle = Math.atan2(end.y - start.y, end.x - start.x);
-      if (angle > Math.PI / 2 || angle < -Math.PI / 2) angle += Math.PI; // Keep text upright
+      if (angle > Math.PI / 2 || angle < -Math.PI / 2) angle += Math.PI;
       
       ctx.save();
       ctx.translate(midX, midY);
@@ -211,33 +202,46 @@ export default function NetworkPage() {
   }, [highlightLinks, hoverNode, selectedNode]);
 
   return (
-    <div className="space-y-6 h-full flex flex-col relative">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">{t("Criminal Network Intelligence")}</h2>
-        <p className="text-gray-500 dark:text-slate-400 mt-1">Interactive graph visualization of syndicates, crimes, and spatial relationships.</p>
+    <div className="space-y-6 h-[calc(100vh-8rem)] flex flex-col relative max-w-[1600px] mx-auto">
+      <div className="flex items-start justify-between">
+        <div>
+          <h2 className="text-3xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-500 font-mono">
+            {t("NEXUS GRAPH")}
+          </h2>
+          <p className="text-slate-400 mt-1 font-mono text-xs uppercase tracking-wider">Topological mapping of syndicates, vectors, and geospatial anchors.</p>
+        </div>
       </div>
 
-      <Card className="flex-1 shadow-sm dark:shadow-2xl border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-[#020817] overflow-hidden flex flex-col relative transition-colors">
-        <CardHeader className="pb-3 border-b border-gray-200 dark:border-slate-800 flex flex-row items-center space-y-0 gap-4 bg-white dark:bg-[#020817] z-10 transition-colors">
-          <div className="relative w-72">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-500 dark:text-slate-500" />
+      <Card className="flex-1 shadow-2xl border-indigo-500/20 bg-[#0f172a]/80 backdrop-blur-md overflow-hidden flex flex-col relative transition-colors">
+        <CardHeader className="pb-3 border-b border-indigo-500/20 flex flex-row items-center space-y-0 gap-4 bg-[#0f172a] z-10">
+          <div className="relative w-80">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-indigo-400" />
             <Input 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              placeholder="Search suspect or ID..." 
-              className="pl-10 bg-gray-100 dark:bg-slate-900 border-gray-200 dark:border-slate-800 text-gray-900 dark:text-slate-200 focus-visible:ring-indigo-500 placeholder:text-gray-500 dark:placeholder:text-slate-500 transition-colors" 
+              placeholder="Search suspect ID or FIR..." 
+              className="pl-10 bg-slate-900/50 border-indigo-500/30 text-white font-mono focus-visible:ring-indigo-500 placeholder:text-slate-500 transition-colors" 
             />
           </div>
-          <Button onClick={handleSearch} disabled={loading} className="bg-indigo-600 hover:bg-indigo-700 text-white">
-            {loading ? "Scanning..." : "Locate Target"}
+          <Button onClick={handleSearch} disabled={loading} className="bg-indigo-600 hover:bg-indigo-700 text-white font-mono tracking-wider">
+            {loading ? "SCANNING..." : "LOCATE TARGET"}
           </Button>
-          <Button onClick={() => { setSelectedNode(null); fgRef.current?.zoomToFit(400); }} variant="outline" className="border-gray-200 dark:border-slate-700 text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors">
-            Reset View
+          <Button onClick={() => { setSelectedNode(null); fgRef.current?.zoomToFit(400); }} variant="outline" className="border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/10 font-mono tracking-wider transition-colors ml-auto">
+            <Crosshair className="h-4 w-4 mr-2"/> RESET MATRIX
           </Button>
         </CardHeader>
         
-        <CardContent className="p-0 flex-1 relative bg-slate-900 dark:bg-[#020817]" id="graph-container">
+        <CardContent className="p-0 flex-1 relative bg-[#020817]" id="graph-container">
+          {loading && (
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#020817]/80 backdrop-blur-sm">
+              <Loader2 className="h-10 w-10 animate-spin text-indigo-500 mb-4 drop-shadow-[0_0_10px_rgba(99,102,241,0.8)]" />
+              <p className="text-indigo-400 font-mono text-sm tracking-widest animate-pulse">COMPILING TOPOLOGY...</p>
+            </div>
+          )}
+          
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-900/10 via-transparent to-transparent pointer-events-none"></div>
+
           <ForceGraph2D
             ref={fgRef}
             width={dimensions.width}
@@ -248,8 +252,9 @@ export default function NetworkPage() {
             onNodeHover={setHoverNode}
             onNodeClick={handleNodeClick}
             linkDirectionalParticles={link => highlightLinks.has(link) ? 4 : 0}
-            linkDirectionalParticleWidth={2}
-            linkDirectionalParticleSpeed={0.01}
+            linkDirectionalParticleWidth={1.5}
+            linkDirectionalParticleColor={() => "rgba(167, 139, 250, 0.8)"}
+            linkDirectionalParticleSpeed={0.015}
             cooldownTicks={100}
             d3AlphaDecay={0.05}
           />
@@ -257,54 +262,53 @@ export default function NetworkPage() {
 
         {/* Dynamic Insights Panel */}
         {selectedNode && (
-          <div className="absolute top-0 right-0 h-full w-80 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-l border-gray-200 dark:border-slate-800 shadow-2xl transition-all duration-300 z-20 flex flex-col">
-            <div className="p-4 border-b border-gray-200 dark:border-slate-800 flex justify-between items-center bg-gray-50 dark:bg-slate-900 transition-colors">
-              <h3 className="font-semibold text-gray-900 dark:text-slate-200 flex items-center gap-2">
-                <Activity className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
-                Intelligence Profile
+          <div className="absolute top-16 right-4 bottom-4 w-80 bg-[#0f172a]/95 backdrop-blur-xl border border-indigo-500/30 shadow-[0_0_30px_rgba(99,102,241,0.15)] rounded-xl transition-all duration-300 z-20 flex flex-col overflow-hidden">
+            <div className="p-4 border-b border-indigo-500/20 flex justify-between items-center bg-indigo-500/5">
+              <h3 className="font-bold text-indigo-400 font-mono tracking-widest flex items-center text-xs">
+                <Network className="h-4 w-4 mr-2" /> DOSSIER
               </h3>
-              <Button variant="ghost" size="icon" onClick={() => setSelectedNode(null)} className="h-6 w-6 text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+              <Button variant="ghost" size="icon" onClick={() => setSelectedNode(null)} className="h-6 w-6 text-slate-400 hover:text-white transition-colors">
                 <X className="h-4 w-4" />
               </Button>
             </div>
             
-            <div className="p-6 overflow-y-auto flex-1 space-y-6">
-              <div className="space-y-1 text-center pb-4 border-b border-gray-200 dark:border-slate-800 transition-colors">
-                <div className={`mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-3 shadow-lg ${
-                  selectedNode.group === "suspect" ? "bg-red-50 dark:bg-red-500/20 text-red-600 dark:text-red-500 border border-red-200 dark:border-red-500/50" :
-                  selectedNode.group === "crime" ? "bg-yellow-50 dark:bg-yellow-500/20 text-yellow-600 dark:text-yellow-500 border border-yellow-200 dark:border-yellow-500/50" :
-                  "bg-blue-50 dark:bg-blue-500/20 text-blue-600 dark:text-blue-500 border border-blue-200 dark:border-blue-500/50"
-                } transition-colors`}>
+            <div className="p-6 overflow-y-auto flex-1 space-y-6 custom-scrollbar">
+              <div className="space-y-1 text-center pb-4 border-b border-slate-800 transition-colors">
+                <div className={`mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-3 shadow-[0_0_15px_currentColor] ${
+                  selectedNode.group === "suspect" ? "bg-rose-500/10 text-rose-500 border border-rose-500/30" :
+                  selectedNode.group === "crime" ? "bg-indigo-500/10 text-indigo-500 border border-indigo-500/30" :
+                  "bg-emerald-500/10 text-emerald-500 border border-emerald-500/30"
+                }`}>
                   {selectedNode.group === "suspect" && <User className="h-8 w-8" />}
                   {selectedNode.group === "crime" && <AlertTriangle className="h-8 w-8" />}
                   {selectedNode.group === "location" && <MapPin className="h-8 w-8" />}
                   {selectedNode.group === "victim" && <Briefcase className="h-8 w-8" />}
                 </div>
-                <h4 className="text-xl font-bold text-gray-900 dark:text-white">{selectedNode.label || selectedNode.id}</h4>
-                <p className="text-xs font-medium uppercase tracking-widest text-gray-500 dark:text-slate-400">{selectedNode.group}</p>
+                <h4 className="text-lg font-black text-white font-mono">{selectedNode.label || selectedNode.id}</h4>
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 font-mono">{selectedNode.group}</p>
               </div>
 
               {selectedNode.group === "suspect" && (
                 <div className="space-y-4">
                   <div>
-                    <p className="text-sm text-gray-500 dark:text-slate-500 mb-1">Risk Score</p>
+                    <p className="text-[10px] uppercase tracking-widest text-slate-500 font-mono mb-1">Risk Quotient</p>
                     <div className="flex items-center gap-3">
-                      <div className="flex-1 h-2 bg-gray-200 dark:bg-slate-800 rounded-full overflow-hidden transition-colors">
+                      <div className="flex-1 h-1 bg-slate-800 rounded-full overflow-hidden">
                         <div 
-                          className={`h-full ${selectedNode.risk > 0.8 ? 'bg-red-500' : 'bg-yellow-500'}`} 
+                          className={`h-full ${selectedNode.risk > 0.8 ? 'bg-rose-500' : 'bg-orange-500'} shadow-[0_0_10px_currentColor]`} 
                           style={{ width: `${(selectedNode.risk || 0.75) * 100}%` }}
                         />
                       </div>
-                      <span className="text-sm font-mono text-gray-700 dark:text-slate-300">{(selectedNode.risk || 0.75).toFixed(2)}</span>
+                      <span className="text-xs font-mono font-bold text-white">{(selectedNode.risk || 0.75).toFixed(2)}</span>
                     </div>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500 dark:text-slate-500 mb-1">Status</p>
-                    <p className="text-sm font-medium text-gray-900 dark:text-slate-300">{selectedNode.status || "Unknown"}</p>
+                    <p className="text-[10px] uppercase tracking-widest text-slate-500 font-mono mb-1">Status</p>
+                    <p className="text-xs font-bold text-slate-300 font-mono">{selectedNode.status || "UNKNOWN"}</p>
                   </div>
-                  <div className="p-3 bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 rounded-lg transition-colors">
-                    <p className="text-xs text-indigo-800 dark:text-indigo-300 leading-relaxed">
-                      <strong>AI Summary:</strong> Subject exhibits high interconnectivity with major property theft syndicates. Immediate surveillance recommended based on historical network density.
+                  <div className="p-3 bg-indigo-500/10 border border-indigo-500/30 rounded-lg">
+                    <p className="text-[10px] text-indigo-300 font-mono leading-relaxed">
+                      <strong className="text-indigo-400">AI SYNTHESIS:</strong> Subject exhibits high interconnectivity with major identified syndicates. Network density indicates organizational leadership role.
                     </p>
                   </div>
                 </div>
@@ -313,12 +317,12 @@ export default function NetworkPage() {
               {selectedNode.group === "crime" && (
                 <div className="space-y-3">
                   <div>
-                    <p className="text-sm text-gray-500 dark:text-slate-500 mb-1">Incident Date</p>
-                    <p className="text-sm font-medium text-gray-900 dark:text-slate-300">{selectedNode.date || "2023-XX-XX"}</p>
+                    <p className="text-[10px] uppercase tracking-widest text-slate-500 font-mono mb-1">Chronology</p>
+                    <p className="text-xs font-bold text-slate-300 font-mono">{selectedNode.date || "UNDOCUMENTED"}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500 dark:text-slate-500 mb-1">Status</p>
-                    <p className="text-sm font-medium text-gray-900 dark:text-slate-300">{selectedNode.status || "Under Investigation"}</p>
+                    <p className="text-[10px] uppercase tracking-widest text-slate-500 font-mono mb-1">Status</p>
+                    <p className="text-xs font-bold text-slate-300 font-mono uppercase">{selectedNode.status || "OPEN INVESTIGATION"}</p>
                   </div>
                 </div>
               )}

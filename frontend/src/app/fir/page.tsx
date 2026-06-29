@@ -26,7 +26,7 @@ export default function FIRSearchPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/firs?limit=15`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://backend-service-50043365852.development.catalystappsail.in'}/api/firs?limit=15`)
       .then(res => res.json())
       .then(data => {
         setFirs(data);
@@ -118,7 +118,7 @@ export default function FIRSearchPage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Link href={`/fir/${fir.id}`}>
+                    <Link href={`/fir/details?id=${fir.id}`}>
                       <Button variant="ghost" size="sm" className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/30">
                         <Eye className="h-4 w-4 mr-1" /> View
                       </Button>

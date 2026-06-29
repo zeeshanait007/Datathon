@@ -89,7 +89,7 @@ export const Sidebar = () => {
       <div className="flex h-16 items-center border-b border-gray-200 dark:border-slate-800 px-6 bg-gray-50/50 dark:bg-slate-900/50">
         <ShieldAlert className="h-6 w-6 text-indigo-600 dark:text-indigo-500" />
         <span className="ml-3 text-lg font-bold tracking-tight text-gray-900 dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-indigo-400 dark:to-cyan-400">
-          Intelligence
+          CrimeLens AI
         </span>
       </div>
       <div className="flex-1 overflow-y-auto py-6 px-4 space-y-1">

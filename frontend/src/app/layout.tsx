@@ -19,7 +19,7 @@ const geistMono = localFont({
 import { ThemeProvider } from "@/components/theme-provider";
 
 export const metadata: Metadata = {
-  title: "Crime Intelligence Copilot",
+  title: "CrimeLens AI",
   description: "AI-Powered Investigative Assistant",
 };
 

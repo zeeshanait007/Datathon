@@ -1,0 +1,299 @@
+-- ========================================================================
+-- ZCQL (Zoho Catalyst Query Language) DDL Reference
+-- ========================================================================
+-- IMPORTANT NOTE: ZCQL strictly does NOT support CREATE TABLE execution 
+-- via the Python SDK, REST API, or the CLI. 
+-- This file maps the 27-table ER schema strictly into Catalyst Data Store 
+-- specific datatypes (e.g. bigint, varchar, double) for your reference 
+-- when configuring the tables manually in the UI.
+-- ========================================================================
+
+CREATE TABLE "Act" (
+	"ActCode" varchar(255) NOT NULL, 
+	"ActDescription" varchar(255), 
+	"ShortName" varchar(255), 
+	"Active" boolean, 
+	PRIMARY KEY ("ActCode")
+);
+
+CREATE TABLE "CaseCategory" (
+	"CaseCategoryID" bigint NOT NULL, 
+	"LookupValue" varchar(255), 
+	PRIMARY KEY ("CaseCategoryID")
+);
+
+CREATE TABLE "CaseStatusMaster" (
+	"CaseStatusID" bigint NOT NULL, 
+	"CaseStatusName" varchar(255), 
+	PRIMARY KEY ("CaseStatusID")
+);
+
+CREATE TABLE "CasteMaster" (
+	caste_master_id bigint NOT NULL, 
+	caste_master_name varchar(255), 
+	PRIMARY KEY (caste_master_id)
+);
+
+CREATE TABLE "CrimeHead" (
+	"CrimeHeadID" bigint NOT NULL, 
+	"CrimeGroupName" varchar(255), 
+	"Active" boolean, 
+	PRIMARY KEY ("CrimeHeadID")
+);
+
+CREATE TABLE "Designation" (
+	"DesignationID" bigint NOT NULL, 
+	"DesignationName" varchar(255), 
+	"Active" boolean, 
+	"SortOrder" bigint, 
+	PRIMARY KEY ("DesignationID")
+);
+
+CREATE TABLE "GravityOffence" (
+	"GravityOffenceID" bigint NOT NULL, 
+	"LookupValue" varchar(255), 
+	PRIMARY KEY ("GravityOffenceID")
+);
+
+CREATE TABLE "OccupationMaster" (
+	"OccupationID" bigint NOT NULL, 
+	"OccupationName" varchar(255), 
+	PRIMARY KEY ("OccupationID")
+);
+
+CREATE TABLE "Rank" (
+	"RankID" bigint NOT NULL, 
+	"RankName" varchar(255), 
+	"Hierarchy" bigint, 
+	"Active" boolean, 
+	PRIMARY KEY ("RankID")
+);
+
+CREATE TABLE "ReligionMaster" (
+	"ReligionID" bigint NOT NULL, 
+	"ReligionName" varchar(255), 
+	PRIMARY KEY ("ReligionID")
+);
+
+CREATE TABLE "State" (
+	"StateID" bigint NOT NULL, 
+	"StateName" varchar(255), 
+	"NationalityID" bigint, 
+	"Active" boolean, 
+	PRIMARY KEY ("StateID")
+);
+
+CREATE TABLE "UnitType" (
+	"UnitTypeID" bigint NOT NULL, 
+	"UnitTypeName" varchar(255), 
+	"CityDistState" varchar(255), 
+	"Hierarchy" bigint, 
+	"Active" boolean, 
+	PRIMARY KEY ("UnitTypeID")
+);
+
+CREATE TABLE "CrimeHeadActSection" (
+	id bigint NOT NULL, 
+	"CrimeHeadID" bigint, 
+	"ActCode" varchar(255), 
+	"SectionCode" varchar(255), 
+	PRIMARY KEY (id), 
+	FOREIGN KEY("CrimeHeadID") REFERENCES "CrimeHead" ("CrimeHeadID"), 
+	FOREIGN KEY("ActCode") REFERENCES "Act" ("ActCode")
+);
+
+CREATE TABLE "CrimeSubHead" (
+	"CrimeSubHeadID" bigint NOT NULL, 
+	"CrimeHeadID" bigint, 
+	"CrimeHeadName" varchar(255), 
+	"SeqID" bigint, 
+	PRIMARY KEY ("CrimeSubHeadID"), 
+	FOREIGN KEY("CrimeHeadID") REFERENCES "CrimeHead" ("CrimeHeadID")
+);
+
+CREATE TABLE "District" (
+	"DistrictID" bigint NOT NULL, 
+	"DistrictName" varchar(255), 
+	"StateID" bigint, 
+	"Active" boolean, 
+	PRIMARY KEY ("DistrictID"), 
+	FOREIGN KEY("StateID") REFERENCES "State" ("StateID")
+);
+
+CREATE TABLE "Section" (
+	"SectionCode" varchar(255) NOT NULL, 
+	"ActCode" varchar(255), 
+	"SectionDescription" varchar(255), 
+	"Active" boolean, 
+	PRIMARY KEY ("SectionCode"), 
+	FOREIGN KEY("ActCode") REFERENCES "Act" ("ActCode")
+);
+
+CREATE TABLE "Court" (
+	"CourtID" bigint NOT NULL, 
+	"CourtName" varchar(255), 
+	"DistrictID" bigint, 
+	"StateID" bigint, 
+	"Active" boolean, 
+	PRIMARY KEY ("CourtID"), 
+	FOREIGN KEY("DistrictID") REFERENCES "District" ("DistrictID"), 
+	FOREIGN KEY("StateID") REFERENCES "State" ("StateID")
+);
+
+CREATE TABLE "Unit" (
+	"UnitID" bigint NOT NULL, 
+	"UnitName" varchar(255), 
+	"TypeID" bigint, 
+	"ParentUnit" bigint, 
+	"NationalityID" bigint, 
+	"StateID" bigint, 
+	"DistrictID" bigint, 
+	"Active" boolean, 
+	PRIMARY KEY ("UnitID"), 
+	FOREIGN KEY("TypeID") REFERENCES "UnitType" ("UnitTypeID"), 
+	FOREIGN KEY("StateID") REFERENCES "State" ("StateID"), 
+	FOREIGN KEY("DistrictID") REFERENCES "District" ("DistrictID")
+);
+
+CREATE TABLE "Employee" (
+	"EmployeeID" bigint NOT NULL, 
+	"DistrictID" bigint, 
+	"UnitID" bigint, 
+	"RankID" bigint, 
+	"DesignationID" bigint, 
+	"KGID" varchar(255), 
+	"FirstName" varchar(255), 
+	"EmployeeDOB" datetime, 
+	"GenderID" bigint, 
+	"BloodGroupID" bigint, 
+	"PhysicallyChallenged" boolean, 
+	"AppointmentDate" datetime, 
+	PRIMARY KEY ("EmployeeID"), 
+	FOREIGN KEY("DistrictID") REFERENCES "District" ("DistrictID"), 
+	FOREIGN KEY("UnitID") REFERENCES "Unit" ("UnitID"), 
+	FOREIGN KEY("RankID") REFERENCES "Rank" ("RankID"), 
+	FOREIGN KEY("DesignationID") REFERENCES "Designation" ("DesignationID")
+);
+
+CREATE TABLE "CaseMaster" (
+	"CaseMasterID" bigint NOT NULL, 
+	"CrimeNo" varchar(255), 
+	"CaseNo" varchar(255), 
+	"CrimeRegisteredDate" datetime, 
+	"PolicePersonID" bigint, 
+	"PoliceStationID" bigint, 
+	"CaseCategoryID" bigint, 
+	"GravityOffenceID" bigint, 
+	"CrimeMajorHeadID" bigint, 
+	"CrimeMinorHeadID" bigint, 
+	"CaseStatusID" bigint, 
+	"CourtID" bigint, 
+	PRIMARY KEY ("CaseMasterID"), 
+	FOREIGN KEY("PolicePersonID") REFERENCES "Employee" ("EmployeeID"), 
+	FOREIGN KEY("PoliceStationID") REFERENCES "Unit" ("UnitID"), 
+	FOREIGN KEY("CaseCategoryID") REFERENCES "CaseCategory" ("CaseCategoryID"), 
+	FOREIGN KEY("GravityOffenceID") REFERENCES "GravityOffence" ("GravityOffenceID"), 
+	FOREIGN KEY("CrimeMajorHeadID") REFERENCES "CrimeHead" ("CrimeHeadID"), 
+	FOREIGN KEY("CrimeMinorHeadID") REFERENCES "CrimeSubHead" ("CrimeSubHeadID"), 
+	FOREIGN KEY("CaseStatusID") REFERENCES "CaseStatusMaster" ("CaseStatusID"), 
+	FOREIGN KEY("CourtID") REFERENCES "Court" ("CourtID")
+);
+
+CREATE TABLE "Accused" (
+	"AccusedMasterID" bigint NOT NULL, 
+	"CaseMasterID" bigint, 
+	"AccusedName" varchar(255), 
+	"AgeYear" bigint, 
+	"GenderID" bigint, 
+	"PersonID" varchar(255), 
+	PRIMARY KEY ("AccusedMasterID"), 
+	FOREIGN KEY("CaseMasterID") REFERENCES "CaseMaster" ("CaseMasterID")
+);
+
+CREATE TABLE "ActSectionAssociation" (
+	id bigint NOT NULL, 
+	"CaseMasterID" bigint, 
+	"ActID" varchar(255), 
+	"SectionID" varchar(255), 
+	"ActOrderID" bigint, 
+	"SectionOrderID" bigint, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY("CaseMasterID") REFERENCES "CaseMaster" ("CaseMasterID"), 
+	FOREIGN KEY("ActID") REFERENCES "Act" ("ActCode"), 
+	FOREIGN KEY("SectionID") REFERENCES "Section" ("SectionCode")
+);
+
+CREATE TABLE "ChargesheetDetails" (
+	"CSID" bigint NOT NULL, 
+	"CaseMasterID" bigint, 
+	csdate datetime, 
+	cstype CHAR, 
+	"PolicePersonID" bigint, 
+	PRIMARY KEY ("CSID"), 
+	FOREIGN KEY("CaseMasterID") REFERENCES "CaseMaster" ("CaseMasterID"), 
+	FOREIGN KEY("PolicePersonID") REFERENCES "Employee" ("EmployeeID")
+);
+
+CREATE TABLE "ComplainantDetails" (
+	"ComplainantID" bigint NOT NULL, 
+	"CaseMasterID" bigint, 
+	"ComplainantName" varchar(255), 
+	"AgeYear" bigint, 
+	"OccupationID" bigint, 
+	"ReligionID" bigint, 
+	"CasteID" bigint, 
+	"GenderID" bigint, 
+	PRIMARY KEY ("ComplainantID"), 
+	FOREIGN KEY("CaseMasterID") REFERENCES "CaseMaster" ("CaseMasterID"), 
+	FOREIGN KEY("OccupationID") REFERENCES "OccupationMaster" ("OccupationID"), 
+	FOREIGN KEY("ReligionID") REFERENCES "ReligionMaster" ("ReligionID"), 
+	FOREIGN KEY("CasteID") REFERENCES "CasteMaster" (caste_master_id)
+);
+
+CREATE TABLE "Inv_OccuranceTime" (
+	id bigint NOT NULL, 
+	"CaseMasterID" bigint, 
+	"IncidentFromDate" datetime, 
+	"IncidentToDate" datetime, 
+	"InfoReceivedPSDate" datetime, 
+	latitude double, 
+	longitude double, 
+	"BriefFacts" varchar(2000), 
+	PRIMARY KEY (id), 
+	FOREIGN KEY("CaseMasterID") REFERENCES "CaseMaster" ("CaseMasterID")
+);
+
+CREATE TABLE "Victim" (
+	"VictimMasterID" bigint NOT NULL, 
+	"CaseMasterID" bigint, 
+	"VictimName" varchar(255), 
+	"AgeYear" bigint, 
+	"GenderID" bigint, 
+	"VictimPolice" varchar(255), 
+	PRIMARY KEY ("VictimMasterID"), 
+	FOREIGN KEY("CaseMasterID") REFERENCES "CaseMaster" ("CaseMasterID")
+);
+
+CREATE TABLE "ArrestSurrender" (
+	"ArrestSurrenderID" bigint NOT NULL, 
+	"CaseMasterID" bigint, 
+	"ArrestSurrenderTypeID" bigint, 
+	"ArrestSurrenderDate" datetime, 
+	"ArrestSurrenderStateId" bigint, 
+	"ArrestSurrenderDistrictId" bigint, 
+	"PoliceStationID" bigint, 
+	"IOID" bigint, 
+	"CourtID" bigint, 
+	"AccusedMasterID" bigint, 
+	"IsAccused" boolean, 
+	"IsComplainantAccused" boolean, 
+	PRIMARY KEY ("ArrestSurrenderID"), 
+	FOREIGN KEY("CaseMasterID") REFERENCES "CaseMaster" ("CaseMasterID"), 
+	FOREIGN KEY("ArrestSurrenderStateId") REFERENCES "State" ("StateID"), 
+	FOREIGN KEY("ArrestSurrenderDistrictId") REFERENCES "District" ("DistrictID"), 
+	FOREIGN KEY("PoliceStationID") REFERENCES "Unit" ("UnitID"), 
+	FOREIGN KEY("IOID") REFERENCES "Employee" ("EmployeeID"), 
+	FOREIGN KEY("CourtID") REFERENCES "Court" ("CourtID"), 
+	FOREIGN KEY("AccusedMasterID") REFERENCES "Accused" ("AccusedMasterID")
+);
+

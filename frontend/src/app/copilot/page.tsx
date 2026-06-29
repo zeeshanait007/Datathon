@@ -39,7 +39,7 @@ export default function CopilotPage() {
     setLoading(true);
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/copilot/chat`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://backend-service-50043365852.development.catalystappsail.in'}/api/copilot/chat`, {
         method: "POST",
         headers: { "Content-Type": "text/plain" },
         body: JSON.stringify({ query: userMsg.content, history: messages })
@@ -63,10 +63,16 @@ export default function CopilotPage() {
     <div className="h-[calc(100vh-8rem)] flex flex-col space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">{t("AI Copilot")}</h2>
-          <p className="text-gray-500 dark:text-slate-400 mt-1">Natural language query interface for the intelligence database.</p>
+          <h2 className="text-3xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-500 font-mono">
+            {t("AI COPILOT")}
+          </h2>
+          <p className="text-slate-400 mt-1 font-mono text-xs uppercase tracking-wider">Natural language query interface for intelligence database.</p>
         </div>
-        <Button variant="outline" className="border-gray-300 dark:border-slate-700 text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800 dark:hover:text-white transition-colors">
+        <Button 
+          variant="outline" 
+          onClick={() => window.print()}
+          className="border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/10 hover:text-indigo-300 transition-colors font-mono tracking-wider print:hidden"
+        >
           <Download className="h-4 w-4 mr-2" /> Export to PDF
         </Button>
       </div>
@@ -131,7 +137,7 @@ export default function CopilotPage() {
           <Input 
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
             placeholder="E.g., Show burglary cases in Bangalore during last 6 months..."
             className="flex-1 bg-white dark:bg-slate-900 border-gray-300 dark:border-slate-700 text-gray-900 dark:text-slate-200 placeholder:text-gray-400 dark:placeholder:text-slate-500 focus-visible:ring-indigo-500"
           />

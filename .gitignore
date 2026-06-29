@@ -8,3 +8,6 @@ venv/
 env/
 .venv/
 .next/
+*.log
+backend/test_zoho_oauth.py
+frontend/public/client-package.json
