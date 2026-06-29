@@ -1,0 +1,10 @@
+{
+  "build_path": ".",
+  "stack": "node20",
+  "build_command": "npm install",
+  "command": "npm start",
+  "memory": 1024,
+  "env_variables": {
+    "NEXT_PUBLIC_API_URL": "<INSERT_CATALYST_BACKEND_SERVICE_URL>"
+  }
+}
